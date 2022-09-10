@@ -4,12 +4,18 @@ Simple command-line interface to send transactions from an offline ethereum wall
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) installed, its possible to install nodejs without an internet connection, see the [official download page](https://nodejs.org/en/download/)
-- A valid Etherscan API key
+- [Node.js](https://nodejs.org/en/) installed
+- A valid Etherscan API key -> [Getting an Etherscan API key](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics#creating-an-api-key)
+
+If you dont have Node.js installed on your offline computer, visit the [official download page](https://nodejs.org/en/download/). Its possible to install node without an internet connection.
 
 ### Getting Started
 
-1. Clone this repository `git clone` on your online computer
+1. Clone this repository on your online computer
+
+```
+git clone git@github.com:beskay/ethereum-offline-tx.git
+```
 
 2. In a terminal, run `npm install` to install the required dependencies
 
@@ -27,7 +33,7 @@ Simple command-line interface to send transactions from an offline ethereum wall
 
 **ON YOUR ONLINE COMPUTER**
 
-1. Copy the .json file from your USB drive to this directory
+1. Copy `tx.json` from your USB drive to this directory
 
 2. Run `node sendTx.js "ENDPOINT_URL" "YOUR_ETHERSCAN_API_KEY"`, e.g. `node sendTx.js "https://api.etherscan.io/" "AA456 ... 2E"` for mainnet
 
@@ -56,7 +62,6 @@ node scripts/signMessage.js "YOUR_PRIVATE_KEY"
 ### Further info
 
 - [List of endpoint URLs](https://docs.etherscan.io/getting-started/endpoint-urls)
-- [Getting an Etherscan API key](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics#creating-an-api-key)
 - [List of chain IDs](https://chainlist.org/)
 
 If you are not comfortable using the command line, you can use [MyEtherWallet](https://kb.myetherwallet.com/es/offline/offline_transaction/)
@@ -80,10 +85,3 @@ Credits to repository [ethereum-raw-transactions](https://github.com/0xV4L3NT1N3
 | chainId              | chainId to send the transaction (e.g. `1` for mainnet, `5` for goerli test network, ...)                                                                          |
 
 [More info](https://ethereum.org/en/developers/docs/transactions/) on transactions, especially more in-depth explanation of the data field, see also the [transactions](https://github.com/ethereumbook/ethereumbook/blob/develop/06transactions.asciidoc) chapter of the Ethereum book.
-
-#### Install nodejs on an offline computer
-
-For Linux systems:
-
-1. Visit the official nodejs [download page](https://nodejs.org/en/download/)
-2. Download the Linux binary
