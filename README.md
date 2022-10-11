@@ -1,5 +1,11 @@
 # Sign and Send Offline Transactions
 
+## Web-App
+
+WIP
+
+## CLI-Tool
+
 Simple command-line interface to send transactions from an offline ethereum wallet.
 
 ### Prerequisites
