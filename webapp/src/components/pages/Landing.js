@@ -1,17 +1,21 @@
 import React from "react";
-import Button from "./Button";
+import Button from "../Button";
+import Header from "../Header";
+import Footer from "../Footer";
 
 const Landing = ({ page, setPage }) => {
   return (
     <div className="text-center">
-      <h3 className="text-lg">Select an option:</h3>
+      <Header />
+      <h3 className="text-xl mb-2">What do you want to do?</h3>
       <Button text="ETH Transfer" onClick={() => setPage("eth")} />
       <Button text="ERC20 Transfer" onClick={() => setPage("erc20")} />
       <Button text="ERC721 Transfer" onClick={() => setPage("erc721")} />
       <Button text="Contract interaction" onClick={() => setPage("contract")} />
-      <h4>or</h4>
+      <h4 className="text-xl my-1">or</h4>
       <Button text="Sign generated tx" onClick={() => setPage("sign")} />
       <Button text="Import signed tx" onClick={() => setPage("import")} />
+      <Footer />
     </div>
   );
 };
