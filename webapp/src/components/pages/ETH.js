@@ -1,10 +1,45 @@
-import React from "react";
+import { ethers } from "ethers";
+
+import React, { useState } from "react";
 import Form from "../Form";
 import Button from "../Button";
 
-import { initProvider } from "../../helper/generateTX";
-
 const ETH = ({ page, setPage }) => {
+  const [chain, setChain] = useState();
+  const [fromAddress, setFromAddress] = useState();
+  const [toAddress, setToAddress] = useState();
+  const [msgValue, setMsgValue] = useState();
+  const [gasLimit, setGasLimit] = useState(21000);
+  const [priorityFee, setPriorityFee] = useState();
+  const [maxFee, setMaxFee] = useState();
+
+  let provider;
+  async function initProvider(value) {
+    let name;
+
+    if (value == 1) name = "homestead";
+    else if (value == 5) name = "goerli";
+    else if (value == 137) name = "matic";
+    else if (value == 80001) name = "maticmum";
+    else if (value == 10) name = "optimism";
+    else if (value == 42161) name = "arbitrum";
+    else return;
+
+    // connect to provider
+    provider = new ethers.providers.AlchemyProvider(name);
+    //let block = await provider.getBlock(15733249);
+    //console.log("block ", block);
+
+    getFeeData();
+  }
+
+  async function getFeeData() {
+    const feeData = await provider.getFeeData();
+
+    setPriorityFee(feeData.maxPriorityFeePerGas.toNumber() / 1000000000);
+    setMaxFee(feeData.maxFeePerGas.toNumber() / 1000000000);
+  }
+
   return (
     <div className="card w-full max-w-xl m-4">
       <p className="card-header px-2 text-lg">ETH Transfer</p>
@@ -25,9 +60,9 @@ const ETH = ({ page, setPage }) => {
         <p>5. Gas limit</p>
         <Form id="gaslimit" type="number" value="21000" />
         <p>6. Max priority fee (in Gwei)</p>
-        <Form id="priority" type="number" />
+        <Form id="priority" type="number" value={priorityFee} />
         <p>7. Max fee (in Gwei)</p>
-        <Form id="maxfee" type="number" />
+        <Form id="maxfee" type="number" value={maxFee} />
         <div className="flex justify-start">
           <Button text="Back" onClick={() => setPage("landing")} />
           <Button text="Next" />

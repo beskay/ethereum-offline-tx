@@ -1,5 +1,9 @@
 import { ethers } from "ethers";
 
+let provider;
+export let priorityFee;
+export let maxFee;
+
 export async function initProvider(value) {
   let name;
 
@@ -12,7 +16,17 @@ export async function initProvider(value) {
   else return;
 
   // connect to provider
-  const provider = new ethers.providers.AlchemyProvider(name);
+  provider = new ethers.providers.AlchemyProvider(name);
   let block = await provider.getBlock(15733249);
   console.log("block ", block);
+
+  getFeeData();
+}
+
+async function getFeeData() {
+  const feeData = await provider.getFeeData();
+  console.log(feeData.gasPrice.toNumber());
+
+  priorityFee = feeData.maxPriorityFeePerGas.toNumber();
+  maxFee = feeData.maxFeePerGas.toNumber();
 }
