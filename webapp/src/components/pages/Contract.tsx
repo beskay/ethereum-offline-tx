@@ -2,7 +2,12 @@ import React from "react";
 import Form from "../Form";
 import Button from "../Button";
 
-const Contract = ({ page, setPage }) => {
+interface pageProps {
+  page: string;
+  setPage: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Contract = ({ page, setPage }: pageProps) => {
   return (
     <div>
       {" "}

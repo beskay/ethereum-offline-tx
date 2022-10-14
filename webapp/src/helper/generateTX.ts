@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+/* import { ethers } from "ethers";
 
 let provider;
 export let priorityFee;
@@ -30,3 +30,6 @@ async function getFeeData() {
   priorityFee = feeData.maxPriorityFeePerGas.toNumber();
   maxFee = feeData.maxFeePerGas.toNumber();
 }
+ */
+
+export {};

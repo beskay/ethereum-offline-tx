@@ -3,7 +3,12 @@ import Button from "../Button";
 import Header from "../Header";
 import Footer from "../Footer";
 
-const Landing = ({ page, setPage }) => {
+interface pageProps {
+  page: string;
+  setPage: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Landing = ({ page, setPage }: pageProps) => {
   return (
     <div className="text-center">
       <Header />

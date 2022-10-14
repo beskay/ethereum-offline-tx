@@ -2,7 +2,12 @@ import React from "react";
 import Form from "../Form";
 import Button from "../Button";
 
-const ERC721 = ({ page, setPage }) => {
+interface pageProps {
+  page: string;
+  setPage: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Import = ({ page, setPage }: pageProps) => {
   return (
     <div>
       {" "}
@@ -12,4 +17,4 @@ const ERC721 = ({ page, setPage }) => {
   );
 };
 
-export default ERC721;
+export default Import;
