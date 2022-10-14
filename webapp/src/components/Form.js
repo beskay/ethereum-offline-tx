@@ -13,7 +13,6 @@ const Form = (props) => {
           className="form-95 w-full"
           value={props.value}
           onChange={(e) => {
-            console.log(e.target.value);
             props.onChange(e.target.value);
           }}
           placeholder={props.placeholder}

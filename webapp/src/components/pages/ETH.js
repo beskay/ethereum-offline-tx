@@ -52,17 +52,42 @@ const ETH = ({ page, setPage }) => {
           onChange={initProvider}
         />
         <p>2. from Address (your cold wallet)</p>
-        <Form id="from" type="text" placeholder="0x1234...abcd" />
+        <Form
+          id="from"
+          type="text"
+          placeholder="0x1234...abcd"
+          onChange={setFromAddress}
+        />
         <p>3. to Address</p>
-        <Form id="to" type="text" placeholder="0x5678...efgh" />
+        <Form
+          id="to"
+          type="text"
+          placeholder="0x5678...efgh"
+          onChange={setToAddress}
+        />
         <p>4. Amount to send (in ETH)</p>
-        <Form id="amnt" type="number" placeholder="0.01" />
+        <Form
+          id="amnt"
+          type="number"
+          placeholder="0.01"
+          onChange={setMsgValue}
+        />
         <p>5. Gas limit</p>
-        <Form id="gaslimit" type="number" value="21000" />
+        <Form
+          id="gaslimit"
+          type="number"
+          value="21000"
+          onChange={setGasLimit}
+        />
         <p>6. Max priority fee (in Gwei)</p>
-        <Form id="priority" type="number" value={priorityFee} />
+        <Form
+          id="priority"
+          type="number"
+          value={priorityFee}
+          onChange={setPriorityFee}
+        />
         <p>7. Max fee (in Gwei)</p>
-        <Form id="maxfee" type="number" value={maxFee} />
+        <Form id="maxfee" type="number" value={maxFee} onChange={setMaxFee} />
         <div className="flex justify-start">
           <Button text="Back" onClick={() => setPage("landing")} />
           <Button text="Next" />
