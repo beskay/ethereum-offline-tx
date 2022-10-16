@@ -36,39 +36,47 @@ const ETH = ({ page, setPage }: pageProps) => {
   async function initProvider(value: string) {
     setChain(value);
 
-    let name;
-    if (value === "1") name = "homestead";
-    else if (value === "5") name = "goerli";
-    else if (value === "137") name = "matic";
-    else if (value === "80001") name = "maticmum";
-    else if (value === "10") name = "optimism";
-    else if (value === "42161") name = "arbitrum";
-    else return;
+    // check if supported network
+    // 1 = homestead, 5 = goerli, 10 = optimism, 137 = matic, 42161 = arbitrum, 80001 = maticmum
+    if (
+      !(
+        value === "1" ||
+        value === "5" ||
+        value === "10" ||
+        value === "137" ||
+        value === "42161" ||
+        value === "80001"
+      )
+    )
+      return 0;
 
     // connect to provider
-    const provider = new ethers.providers.AlchemyProvider(name);
+    const provider = new ethers.providers.AlchemyProvider(Number(value));
     console.log(provider);
-    //let block = await provider.getBlock(15733249);
-    //console.log("block ", block);
-
+    // set fee data
     getFeeData(provider);
   }
 
   async function getFeeData(provider: any) {
     const feeData = await provider.getFeeData();
 
+    // divide by 1 000 000 000 to convert to gwei
+    let factor = 1000000000;
+
     setPriorityFee(
-      (feeData.maxPriorityFeePerGas.toNumber() / 1000000000).toString()
+      (feeData.maxPriorityFeePerGas.toNumber() / factor).toString()
     );
-    setMaxFee((feeData.maxFeePerGas.toNumber() / 1000000000).toString());
+    setMaxFee((feeData.maxFeePerGas.toNumber() / factor).toString());
   }
 
   async function initFromAddress(value: string) {
     setFromAddress(value);
     console.log(fromAddress);
+
     // connect to provider
     const provider = new ethers.providers.AlchemyProvider(Number(chain));
 
+    // set nonce
     let nonce = await provider.getTransactionCount(value);
     setNonce(nonce.toString());
     console.log("nonce", nonce);
