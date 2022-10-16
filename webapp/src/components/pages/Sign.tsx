@@ -17,37 +17,37 @@ const Sign = ({ page, setPage }: pageProps) => {
   const [signer, setSigner] = useState("");
 
   const radioHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSigner(
-      ethers.Wallet.fromMnemonic(
-        `${mnemonic}`,
-        `m/44'/60'/0'/0/${e.target.value}`
-      ).address.toString()
+    let wallet = ethers.Wallet.fromMnemonic(
+      `${mnemonic}`,
+      `m/44'/60'/0'/0/${e.target.value}`
     );
+    setSigner(wallet.address.toString());
+    setPrivKey(wallet.privateKey.toString());
   };
+
+  function verifyPrivKey(value: string) {
+    try {
+      new ethers.Wallet(value);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
 
   return (
     <div className="card w-full max-w-xl m-4">
       <p className="card-header px-2 text-lg">ETH Transfer</p>
       {currentStep === 1 && (
         <div className="p-4">
-          <p className="text-center">
-            Sensitive information! <br /> Only use on an offline computer!
-          </p>
-          <p>1. Input your mnemonic OR private key</p>
+          <p className="text-center font-bold mb-4">Offline computer only!</p>
+          <p className="mb-2">1. Input your mnemonic OR private key</p>
           <Form
             type="password"
             placeholder="your mnemonic"
             value={mnemonic}
             onChange={setMnemonic}
           />
-          <Form
-            type="password"
-            placeholder="your private key"
-            value={privKey}
-            onChange={setPrivKey}
-          />
-
-          {mnemonic != "" && ethers.utils.isValidMnemonic(mnemonic) && (
+          {ethers.utils.isValidMnemonic(mnemonic) && (
             <div>
               <p>2. Choose the signer account</p>
               <div>
@@ -85,6 +85,21 @@ const Sign = ({ page, setPage }: pageProps) => {
                 ).address.toString()}
               </div>
               {signer}
+              {privKey}
+            </div>
+          )}
+
+          <Form
+            type="password"
+            placeholder="your private key"
+            value={privKey}
+            onChange={setPrivKey}
+          />
+
+          {verifyPrivKey(privKey) && (
+            <div>
+              <p>2. Signing with address:</p>
+              {new ethers.Wallet(privKey).address.toString()}
             </div>
           )}
 
@@ -113,7 +128,7 @@ const Sign = ({ page, setPage }: pageProps) => {
               }
 
               if (!!error) {
-                console.info(error);
+                //console.info(error);
               }
             }}
           />
