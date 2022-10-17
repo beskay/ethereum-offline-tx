@@ -1,9 +1,5 @@
 # Sign and Send Offline Transactions
 
-## Web-App
-
-WIP
-
 ## CLI-Tool
 
 Simple command-line interface to send transactions from an offline ethereum wallet.
@@ -70,8 +66,6 @@ node scripts/signMessage.js "YOUR_PRIVATE_KEY"
 - [List of endpoint URLs](https://docs.etherscan.io/getting-started/endpoint-urls)
 - [List of chain IDs](https://chainlist.org/)
 
-If you are not comfortable using the command line, you can use [MyEtherWallet](https://kb.myetherwallet.com/es/offline/offline_transaction/)
-
 Credits to repository [ethereum-raw-transactions](https://github.com/0xV4L3NT1N3/ethereum-raw-transactions), which was used as a template.
 
 ### Appendix
@@ -91,3 +85,10 @@ Credits to repository [ethereum-raw-transactions](https://github.com/0xV4L3NT1N3
 | chainId              | chainId to send the transaction (e.g. `1` for mainnet, `5` for goerli test network, ...)                                                                          |
 
 [More info](https://ethereum.org/en/developers/docs/transactions/) on transactions, especially more in-depth explanation of the data field, see also the [transactions](https://github.com/ethereumbook/ethereumbook/blob/develop/06transactions.asciidoc) chapter of the Ethereum book.
+
+
+## Web app
+
+A web interface to simplify the process of sending an offline transaction, built with React.js and TypeScript.
+
+WIP, more info will follow.
