@@ -14,7 +14,9 @@ const Sign = ({ page, setPage }: pageProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [mnemonic, setMnemonic] = useState("");
   const [privKey, setPrivKey] = useState("");
-  const [signer, setSigner] = useState("");
+  const [signer, setSigner] = useState("No signer");
+
+  const [files, setFiles] = useState("");
 
   const radioHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     let wallet = ethers.Wallet.fromMnemonic(
@@ -34,9 +36,26 @@ const Sign = ({ page, setPage }: pageProps) => {
     return true;
   }
 
+  const readFileOnUpload = (uploadedFile: any) => {
+    const fileReader = new FileReader();
+    fileReader.onloadend = () => {
+      try {
+        setData(JSON.parse(fileReader.result as string));
+        console.log(JSON.parse(fileReader.result as string));
+      } catch (e) {
+        console.log("**Not valid JSON file!**");
+      }
+    };
+    if (uploadedFile !== undefined) fileReader.readAsText(uploadedFile);
+  };
+
+  const handleQRcode = (result: string) => {
+    setData(JSON.parse(result));
+  };
+
   return (
     <div className="card w-full max-w-xl m-4">
-      <p className="card-header px-2 text-lg">ETH Transfer</p>
+      <p className="card-header px-2 text-lg">Signing transaction</p>
       {currentStep === 1 && (
         <div className="p-4">
           <p className="text-center font-bold mb-4">Offline computer only!</p>
@@ -117,14 +136,17 @@ const Sign = ({ page, setPage }: pageProps) => {
 
       {currentStep === 2 && (
         <div className="p-4">
-          <p>1. Download the generated .json File</p>
-          <Button text="Download json" onClick={() => {}} />
+          <p>1. Upload the previously generated .json File</p>
+          <input
+            type="file"
+            onChange={(e: any) => readFileOnUpload(e.target.files[0])}
+          />
           <p className="mt-6">2. Or scan the generated QR code</p>
           {/* @ts-ignore */}
           <QrReader
             onResult={(result, error) => {
               if (!!result) {
-                setData(result.getText());
+                handleQRcode(result.getText());
               }
 
               if (!!error) {
@@ -132,9 +154,31 @@ const Sign = ({ page, setPage }: pageProps) => {
               }
             }}
           />
-          <p>{data}</p>
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(1)} />
+            <Button text="Next" onClick={() => setCurrentStep(3)} />
+          </div>
+        </div>
+      )}
+
+      {currentStep === 3 && (
+        <div className="p-4">
+          <p>Transaction to sign:</p>
+          {JSON.stringify(data)}
+          <p>You are signing with address:</p>
+          {signer}
+          <div className="flex justify-start">
+            <Button text="Back" onClick={() => setCurrentStep(2)} />
+            <Button text="Confirm" onClick={() => setCurrentStep(4)} />
+          </div>
+        </div>
+      )}
+
+      {currentStep === 4 && (
+        <div className="p-4">
+          <p>WIP</p>
+          <div className="flex justify-start">
+            <Button text="Back" onClick={() => setCurrentStep(3)} />
           </div>
         </div>
       )}
