@@ -14,23 +14,24 @@ const ETH = ({ page, setPage }: pageProps) => {
   const [chain, setChain] = useState("");
   const [fromAddress, setFromAddress] = useState("");
   const [toAddress, setToAddress] = useState("");
-  const [msgValue, setMsgValue] = useState("");
+  const [msgValue, setMsgValue] = useState(0);
   const [nonce, setNonce] = useState("");
-  const [gasLimit, setGasLimit] = useState("21000");
-  const [priorityFee, setPriorityFee] = useState("");
-  const [maxFee, setMaxFee] = useState("");
+  const [gasLimit, setGasLimit] = useState(21000);
+  const [priorityFee, setPriorityFee] = useState(0);
+  const [maxFee, setMaxFee] = useState(0);
 
   // define transaction
   let transaction = {
-    to: { toAddress },
-    value: { msgValue },
+    from: `${fromAddress}`,
+    to: `${toAddress}`,
+    value: ethers.utils.parseEther(`${msgValue}`),
     data: "",
-    gasLimit: { gasLimit },
-    maxPriorityFeePerGas: { priorityFee },
-    maxFeePerGas: { maxFee },
-    nonce: { nonce },
+    gasLimit: `${gasLimit}`,
+    maxPriorityFeePerGas: ethers.utils.parseUnits(`${priorityFee}`, "gwei"),
+    maxFeePerGas: ethers.utils.parseUnits(`${maxFee}`, "gwei"),
+    nonce: `${nonce}`,
     type: 2,
-    chainId: { chain },
+    chainId: `${chain}`,
   };
 
   async function initProvider(value: string) {
@@ -63,10 +64,8 @@ const ETH = ({ page, setPage }: pageProps) => {
     // divide by 1 000 000 000 to convert to gwei
     let factor = 1000000000;
 
-    setPriorityFee(
-      (feeData.maxPriorityFeePerGas.toNumber() / factor).toString()
-    );
-    setMaxFee((feeData.maxFeePerGas.toNumber() / factor).toString());
+    setPriorityFee(feeData.maxPriorityFeePerGas / factor);
+    setMaxFee(feeData.maxFeePerGas / factor);
   }
 
   async function initFromAddress(value: string) {
@@ -152,12 +151,19 @@ const ETH = ({ page, setPage }: pageProps) => {
         <div className="p-4">
           <p>1. Download the generated .json File</p>
           <a
+            id="downloadJson"
             href={`data:text/json;charset=utf-8,${encodeURIComponent(
               JSON.stringify(transaction)
             )}`}
-            download="tx.json"
           >
-            <Button text="Download json" onClick={() => {}} />
+            <Button
+              text="Download json"
+              onClick={() => {
+                document
+                  .getElementById("downloadJson")
+                  ?.setAttribute("download", `${Date.now()}.json`);
+              }}
+            />
           </a>
           <p className="mt-6">2. Or scan the generated QR code</p>
           <QRCodeSVG value={JSON.stringify(transaction)} className="m-4" />

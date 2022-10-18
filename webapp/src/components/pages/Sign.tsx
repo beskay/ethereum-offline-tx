@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { QrReader } from "react-qr-reader";
+import { QRCodeSVG } from "qrcode.react";
 import { ethers } from "ethers";
 import Form from "../Form";
 import Button from "../Button";
@@ -11,19 +12,17 @@ interface pageProps {
 
 const Sign = ({ page, setPage }: pageProps) => {
   const [data, setData] = useState("No result");
+  const [signedTx, setSignedTx] = useState("No tx");
+  const [fileName, setFileName] = useState("No file");
   const [currentStep, setCurrentStep] = useState(1);
   const [mnemonic, setMnemonic] = useState("");
   const [privKey, setPrivKey] = useState("");
-  const [signer, setSigner] = useState("No signer");
-
-  const [files, setFiles] = useState("");
 
   const radioHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     let wallet = ethers.Wallet.fromMnemonic(
       `${mnemonic}`,
       `m/44'/60'/0'/0/${e.target.value}`
     );
-    setSigner(wallet.address.toString());
     setPrivKey(wallet.privateKey.toString());
   };
 
@@ -47,10 +46,25 @@ const Sign = ({ page, setPage }: pageProps) => {
       }
     };
     if (uploadedFile !== undefined) fileReader.readAsText(uploadedFile);
+
+    setFileName(uploadedFile.name.split(".")[0]);
   };
 
   const handleQRcode = (result: string) => {
     setData(JSON.parse(result));
+    console.log(JSON.parse(result));
+  };
+
+  const signTransaction = async (data: any) => {
+    let signer = new ethers.Wallet(privKey);
+
+    // sign and serialize tx
+    let rawTransaction = await signer
+      .signTransaction(data)
+      // @ts-ignore
+      .then(ethers.utils.serializeTransaction(data));
+
+    setSignedTx(rawTransaction);
   };
 
   return (
@@ -103,8 +117,6 @@ const Sign = ({ page, setPage }: pageProps) => {
                   `m/44'/60'/0'/0/2`
                 ).address.toString()}
               </div>
-              {signer}
-              {privKey}
             </div>
           )}
 
@@ -166,17 +178,40 @@ const Sign = ({ page, setPage }: pageProps) => {
           <p>Transaction to sign:</p>
           {JSON.stringify(data)}
           <p>You are signing with address:</p>
-          {signer}
+          {new ethers.Wallet(privKey).address.toString()}
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(2)} />
-            <Button text="Confirm" onClick={() => setCurrentStep(4)} />
+            <Button
+              text="Confirm"
+              onClick={() => {
+                setCurrentStep(4);
+                signTransaction(data);
+              }}
+            />
           </div>
         </div>
       )}
 
       {currentStep === 4 && (
         <div className="p-4">
-          <p>WIP</p>
+          <p>1. Download the signed transaction</p>
+          <a
+            id="downloadJson"
+            href={`data:text/json;charset=utf-8,${encodeURIComponent(
+              JSON.stringify(signedTx)
+            )}`}
+          >
+            <Button
+              text="Download json"
+              onClick={() => {
+                document
+                  .getElementById("downloadJson")
+                  ?.setAttribute("download", `${fileName}_signed.json`);
+              }}
+            />
+          </a>
+          <p className="mt-6">2. Or scan the generated QR code</p>
+          <QRCodeSVG value={JSON.stringify(signedTx)} className="m-4" />{" "}
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(3)} />
           </div>

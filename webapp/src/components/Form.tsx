@@ -2,7 +2,7 @@ import React from "react";
 
 interface FormProps {
   type: string;
-  value: string;
+  value: string | number;
   onChange: any;
   placeholder: string;
 }
