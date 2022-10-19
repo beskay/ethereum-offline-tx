@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { QrReader } from "react-qr-reader";
 import { QRCodeSVG } from "qrcode.react";
 import { ethers } from "ethers";
@@ -10,9 +10,28 @@ interface pageProps {
   setPage: React.Dispatch<React.SetStateAction<string>>;
 }
 
+interface Transaction {
+  from: string;
+  to: string;
+  value: { type: string; hex: string };
+  data: string;
+  gasLimit: string;
+  maxPriorityFeePerGas: { type: string; hex: string };
+  maxFeePerGas: { type: string; hex: string };
+  nonce: string;
+  type: 2;
+  chainId: string;
+}
+
+interface SignedTransaction {
+  signedTx: string;
+  initialTx: Transaction;
+}
+
 const Sign = ({ page, setPage }: pageProps) => {
-  const [data, setData] = useState("No result");
-  const [signedTx, setSignedTx] = useState("No tx");
+  const [data, setData] = useState<Transaction>();
+  const [clearTx, setClearTx] = useState<Transaction>();
+  const [tx, setTx] = useState<SignedTransaction>();
   const [fileName, setFileName] = useState("No file");
   const [currentStep, setCurrentStep] = useState(1);
   const [mnemonic, setMnemonic] = useState("");
@@ -64,7 +83,14 @@ const Sign = ({ page, setPage }: pageProps) => {
       // @ts-ignore
       .then(ethers.utils.serializeTransaction(data));
 
-    setSignedTx(rawTransaction);
+    //setSignedTx(rawTransaction);
+
+    let txobj = {
+      signedTx: rawTransaction,
+      initialTx: data,
+    };
+
+    setTx(txobj);
   };
 
   return (
@@ -176,7 +202,24 @@ const Sign = ({ page, setPage }: pageProps) => {
       {currentStep === 3 && (
         <div className="p-4">
           <p>Transaction to sign:</p>
-          {JSON.stringify(data)}
+          {JSON.stringify(
+            {
+              from: data?.from,
+              to: data?.to,
+              "value (in wei)": Number(data?.value.hex),
+              data: data?.data,
+              gasLimit: data?.gasLimit,
+              "maxPriorityFeePerGas (in wei)": Number(
+                data?.maxPriorityFeePerGas.hex
+              ),
+              "maxFeePerGas (in wei)": Number(data?.maxFeePerGas.hex),
+              nonce: data?.nonce,
+              type: 2,
+              chainId: data?.chainId,
+            },
+            null,
+            2
+          )}
           <p>You are signing with address:</p>
           {new ethers.Wallet(privKey).address.toString()}
           <div className="flex justify-start">
@@ -198,7 +241,7 @@ const Sign = ({ page, setPage }: pageProps) => {
           <a
             id="downloadJson"
             href={`data:text/json;charset=utf-8,${encodeURIComponent(
-              JSON.stringify(signedTx)
+              JSON.stringify(tx)
             )}`}
           >
             <Button
@@ -211,7 +254,7 @@ const Sign = ({ page, setPage }: pageProps) => {
             />
           </a>
           <p className="mt-6">2. Or scan the generated QR code</p>
-          <QRCodeSVG value={JSON.stringify(signedTx)} className="m-4" />{" "}
+          <QRCodeSVG value={JSON.stringify(tx)} className="m-4" />{" "}
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(3)} />
           </div>
