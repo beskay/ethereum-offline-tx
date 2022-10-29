@@ -9,16 +9,16 @@ interface pageProps {
 }
 
 interface Transaction {
-  from: string;
   to: string;
-  value: { type: string; hex: string };
-  data: string;
-  gasLimit: string;
-  maxPriorityFeePerGas: { type: string; hex: string };
-  maxFeePerGas: { type: string; hex: string };
-  nonce: string;
+  from: string;
+  nonce: number;
+  gasLimit: number;
+  data: ethers.BytesLike;
+  value: ethers.BigNumber;
+  chainId: number;
   type: 2;
-  chainId: string;
+  maxPriorityFeePerGas: ethers.BigNumber;
+  maxFeePerGas: ethers.BigNumber;
 }
 
 interface SignedTransaction {
@@ -28,13 +28,13 @@ interface SignedTransaction {
 
 const Import = ({ page, setPage }: pageProps) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<SignedTransaction>();
+  const [tx, setTx] = useState<SignedTransaction>();
 
   const readFileOnUpload = (uploadedFile: any) => {
     const fileReader = new FileReader();
     fileReader.onloadend = () => {
       try {
-        setData(JSON.parse(fileReader.result as string));
+        setTx(JSON.parse(fileReader.result as string));
         console.log(JSON.parse(fileReader.result as string));
       } catch (e) {
         console.log("**Not valid JSON file!**");
@@ -44,33 +44,53 @@ const Import = ({ page, setPage }: pageProps) => {
   };
 
   const handleQRcode = (result: string) => {
-    setData(JSON.parse(result));
+    setTx(JSON.parse(result));
     console.log(JSON.parse(result));
   };
 
+  const formatTransaction = (): string => {
+    if (tx != undefined) {
+      return JSON.stringify(
+        {
+          from: tx?.initialTx.from,
+          to: tx?.initialTx.to,
+          nonce: tx?.initialTx.nonce,
+          gasLimit: tx?.initialTx.gasLimit,
+          data: tx?.initialTx.data,
+          "value (in ETH)": ethers.utils.formatEther(tx?.initialTx.value),
+          chainId: tx?.initialTx.chainId,
+          type: 2,
+          "maxPriorityFeePerGas (in Gwei)": ethers.utils.formatUnits(
+            tx?.initialTx.maxPriorityFeePerGas,
+            "gwei"
+          ),
+          "maxFeePerGas (in Gwei)": ethers.utils.formatUnits(
+            tx?.initialTx.maxFeePerGas,
+            "gwei"
+          ),
+        },
+        null,
+        2
+      );
+    } else {
+      return "no transaction specified";
+    }
+  };
+
   const sendTransaction = async () => {
-    let chain = data?.initialTx.chainId;
-    // check if supported network
-    // 1 = homestead, 5 = goerli, 10 = optimism, 137 = matic, 42161 = arbitrum, 80001 = maticmum
-    if (
-      !(
-        chain === "1" ||
-        chain === "5" ||
-        chain === "10" ||
-        chain === "137" ||
-        chain === "42161" ||
-        chain === "80001"
-      )
-    )
-      return 0;
+    if (tx != undefined) {
+      let chain = tx?.initialTx.chainId;
 
-    // connect to provider
-    const provider = new ethers.providers.AlchemyProvider(Number(chain));
+      // connect to provider
+      const provider = new ethers.providers.AlchemyProvider(Number(chain));
 
-    // send tx
-    const tx = await provider.sendTransaction(`${data?.signedTx}`);
-    console.log(tx);
-    alert(`Success! Tx hash: ${tx.hash}`);
+      // send tx
+      const sentTransaction = await provider.sendTransaction(`${tx?.signedTx}`);
+      console.log(tx);
+      alert(`Success! Tx hash: ${sentTransaction.hash}`);
+    } else {
+      console.log("no tx defined");
+    }
   };
 
   return (
@@ -84,13 +104,12 @@ const Import = ({ page, setPage }: pageProps) => {
             onChange={(e: any) => readFileOnUpload(e.target.files[0])}
           />
           <p className="mt-6">2. Or scan the generated QR code</p>
-          {/* @ts-ignore */}
           <QrReader
+            constraints={{}}
             onResult={(result, error) => {
               if (!!result) {
                 handleQRcode(result.getText());
               }
-
               if (!!error) {
                 //console.info(error);
               }
@@ -105,24 +124,9 @@ const Import = ({ page, setPage }: pageProps) => {
       {currentStep === 2 && (
         <div className="p-4">
           <p>Transaction to send:</p>
-          {JSON.stringify(
-            {
-              from: data?.initialTx.from,
-              to: data?.initialTx.to,
-              "value (in wei)": Number(data?.initialTx.value.hex),
-              data: data?.initialTx.data,
-              gasLimit: data?.initialTx.gasLimit,
-              "maxPriorityFeePerGas (in wei)": Number(
-                data?.initialTx.maxPriorityFeePerGas.hex
-              ),
-              "maxFeePerGas (in wei)": Number(data?.initialTx.maxFeePerGas.hex),
-              nonce: data?.initialTx.nonce,
-              type: 2,
-              chainId: data?.initialTx.chainId,
-            },
-            null,
-            2
-          )}{" "}
+          <div className="m-2 p-2 border border-gray">
+            {formatTransaction()}
+          </div>
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(1)} />
             <Button

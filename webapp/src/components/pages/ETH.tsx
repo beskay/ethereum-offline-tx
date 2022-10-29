@@ -9,77 +9,86 @@ interface pageProps {
   setPage: React.Dispatch<React.SetStateAction<string>>;
 }
 
+interface Transaction {
+  to: string;
+  from: string;
+  nonce: number;
+  gasLimit: number;
+  data: ethers.BytesLike;
+  value: ethers.BigNumber;
+  chainId: number;
+  type: 2;
+  maxPriorityFeePerGas: ethers.BigNumber;
+  maxFeePerGas: ethers.BigNumber;
+}
+
 const ETH = ({ page, setPage }: pageProps) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [chain, setChain] = useState("");
-  const [fromAddress, setFromAddress] = useState("");
+  const [provider, setProvider] = useState<ethers.providers.AlchemyProvider>();
+  // transaction state
   const [toAddress, setToAddress] = useState("");
-  const [msgValue, setMsgValue] = useState(0);
-  const [nonce, setNonce] = useState("");
+  const [fromAddress, setFromAddress] = useState("");
+  const [nonce, setNonce] = useState(0);
   const [gasLimit, setGasLimit] = useState(21000);
+  const [msgValue, setMsgValue] = useState(0);
+  const [chain, setChain] = useState(0);
   const [priorityFee, setPriorityFee] = useState(0);
   const [maxFee, setMaxFee] = useState(0);
 
   // define transaction
-  let transaction = {
-    from: `${fromAddress}`,
+  let transaction: Transaction = {
     to: `${toAddress}`,
-    value: ethers.utils.parseEther(`${msgValue}`),
+    from: `${fromAddress}`,
+    nonce: nonce,
+    gasLimit: gasLimit,
     data: "",
-    gasLimit: `${gasLimit}`,
+    value: ethers.utils.parseEther(`${msgValue}`),
+    chainId: chain,
+    type: 2,
     maxPriorityFeePerGas: ethers.utils.parseUnits(`${priorityFee}`, "gwei"),
     maxFeePerGas: ethers.utils.parseUnits(`${maxFee}`, "gwei"),
-    nonce: `${nonce}`,
-    type: 2,
-    chainId: `${chain}`,
   };
 
-  async function initProvider(value: string) {
-    setChain(value);
+  const handleChain = async (chainId: string) => {
+    // update state
+    setChain(Number(chainId));
 
-    // check if supported network
-    // 1 = homestead, 5 = goerli, 10 = optimism, 137 = matic, 42161 = arbitrum, 80001 = maticmum
-    if (
-      !(
-        value === "1" ||
-        value === "5" ||
-        value === "10" ||
-        value === "137" ||
-        value === "42161" ||
-        value === "80001"
-      )
-    )
-      return 0;
+    try {
+      // connect to provider
+      // supported networks: 1 = homestead, 5 = goerli, 10 = optimism, 137 = matic, 42161 = arbitrum, 80001 = maticmum
+      const provider = new ethers.providers.AlchemyProvider(
+        Number(chainId),
+        process.env.REACT_APP_ALCHEMY_API_KEY
+      );
+      setProvider(provider);
 
-    // connect to provider
-    const provider = new ethers.providers.AlchemyProvider(Number(value));
-    console.log(provider);
-    // set fee data
-    getFeeData(provider);
-  }
+      // set fee data
+      const feeData = await provider.getFeeData();
 
-  async function getFeeData(provider: any) {
-    const feeData = await provider.getFeeData();
+      // divide by 1 000 000 000 to convert to gwei
+      setPriorityFee(Number(feeData.maxPriorityFeePerGas) / 1000_000_000);
+      setMaxFee(Number(feeData.maxFeePerGas) / 1000_000_000);
+    } catch (e: any) {
+      console.log("error, ", e.message);
+      console.log(
+        "supported networks: 1 = homestead, 5 = goerli, 10 = optimism, 137 = matic, 42161 = arbitrum, 80001 = maticmum"
+      );
+    }
+  };
 
-    // divide by 1 000 000 000 to convert to gwei
-    let factor = 1000000000;
-
-    setPriorityFee(feeData.maxPriorityFeePerGas / factor);
-    setMaxFee(feeData.maxFeePerGas / factor);
-  }
-
-  async function initFromAddress(value: string) {
+  const handleFromAddress = async (value: string) => {
+    // update state
     setFromAddress(value);
-    console.log(fromAddress);
 
-    // connect to provider
-    const provider = new ethers.providers.AlchemyProvider(Number(chain));
-
-    // set nonce
-    let nonce = await provider.getTransactionCount(value);
-    setNonce(nonce.toString());
-    console.log("nonce", nonce);
-  }
+    if (provider != undefined) {
+      // set nonce
+      let nonce: number = await provider.getTransactionCount(value);
+      setNonce(nonce);
+      console.log("nonce", nonce);
+    } else {
+      console.log("cant set nonce, provider not set or unsupported");
+    }
+  };
 
   return (
     <div className="card w-full max-w-xl m-4">
@@ -91,14 +100,14 @@ const ETH = ({ page, setPage }: pageProps) => {
             type="number"
             placeholder="1"
             value={chain}
-            onChange={initProvider}
+            onChange={handleChain}
           />
           <p>2. from Address (your cold wallet)</p>
           <Form
             type="text"
             placeholder="0x1234...abcd"
             value={fromAddress}
-            onChange={initFromAddress}
+            onChange={handleFromAddress}
           />
           <p>3. to Address</p>
           <Form
@@ -114,21 +123,28 @@ const ETH = ({ page, setPage }: pageProps) => {
             value={msgValue}
             onChange={setMsgValue}
           />
-          <p>5. Gas limit</p>
+          <p>5. Nonce</p>
+          <Form
+            type="number"
+            placeholder=""
+            value={nonce}
+            onChange={setNonce}
+          />
+          <p>6. Gas limit</p>
           <Form
             type="number"
             placeholder=""
             value={gasLimit}
             onChange={setGasLimit}
           />
-          <p>6. Max priority fee (in Gwei)</p>
+          <p>7. Max priority fee (in Gwei)</p>
           <Form
             type="number"
             placeholder=""
             value={priorityFee}
             onChange={setPriorityFee}
           />
-          <p>7. Max fee (in Gwei)</p>
+          <p>8. Max fee (in Gwei)</p>
           <Form
             type="number"
             placeholder=""

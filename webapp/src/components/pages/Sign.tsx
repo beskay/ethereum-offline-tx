@@ -11,16 +11,16 @@ interface pageProps {
 }
 
 interface Transaction {
-  from: string;
   to: string;
-  value: { type: string; hex: string };
-  data: string;
-  gasLimit: string;
-  maxPriorityFeePerGas: { type: string; hex: string };
-  maxFeePerGas: { type: string; hex: string };
-  nonce: string;
+  from: string;
+  nonce: number;
+  gasLimit: number;
+  data: ethers.BytesLike;
+  value: ethers.BigNumber;
+  chainId: number;
   type: 2;
-  chainId: string;
+  maxPriorityFeePerGas: ethers.BigNumber;
+  maxFeePerGas: ethers.BigNumber;
 }
 
 interface SignedTransaction {
@@ -29,15 +29,25 @@ interface SignedTransaction {
 }
 
 const Sign = ({ page, setPage }: pageProps) => {
-  const [data, setData] = useState<Transaction>();
-  const [clearTx, setClearTx] = useState<Transaction>();
-  const [tx, setTx] = useState<SignedTransaction>();
-  const [fileName, setFileName] = useState("No file");
   const [currentStep, setCurrentStep] = useState(1);
+  // transaction data
+  const [tx, setTx] = useState<Transaction>();
+  const [signedTx, setSignedTx] = useState<SignedTransaction>();
+  // filename of json transaction
+  const [fileName, setFileName] = useState("No file");
+  // wallet data
   const [mnemonic, setMnemonic] = useState("");
   const [privKey, setPrivKey] = useState("");
+  const [address, setAddress] = useState("");
+  const [validKey, setValidKey] = useState(false);
+  const [validMnemonic, setValidMnemonic] = useState(false);
 
-  const radioHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMnemonic = (mnemonic: string) => {
+    setMnemonic(mnemonic);
+    setValidMnemonic(ethers.utils.isValidMnemonic(mnemonic));
+  };
+
+  const handleRadioInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let wallet = ethers.Wallet.fromMnemonic(
       `${mnemonic}`,
       `m/44'/60'/0'/0/${e.target.value}`
@@ -45,23 +55,28 @@ const Sign = ({ page, setPage }: pageProps) => {
     setPrivKey(wallet.privateKey.toString());
   };
 
-  function verifyPrivKey(value: string) {
+  const handlePrivKey = (privKey: string) => {
+    setPrivKey(privKey);
+
+    // verify privkey
     try {
-      new ethers.Wallet(value);
-    } catch (e) {
-      return false;
+      let wallet = new ethers.Wallet(privKey);
+      setValidKey(true);
+      setAddress(wallet.address.toString());
+    } catch (e: any) {
+      console.log(e.message);
+      setValidKey(false);
     }
-    return true;
-  }
+  };
 
   const readFileOnUpload = (uploadedFile: any) => {
     const fileReader = new FileReader();
     fileReader.onloadend = () => {
       try {
-        setData(JSON.parse(fileReader.result as string));
+        setTx(JSON.parse(fileReader.result as string));
         console.log(JSON.parse(fileReader.result as string));
       } catch (e) {
-        console.log("**Not valid JSON file!**");
+        console.log("**Not a valid JSON file!**");
       }
     };
     if (uploadedFile !== undefined) fileReader.readAsText(uploadedFile);
@@ -70,27 +85,57 @@ const Sign = ({ page, setPage }: pageProps) => {
   };
 
   const handleQRcode = (result: string) => {
-    setData(JSON.parse(result));
+    setTx(JSON.parse(result));
     console.log(JSON.parse(result));
   };
 
-  const signTransaction = async (data: any) => {
-    let signer = new ethers.Wallet(privKey);
+  const formatTransaction = (): string => {
+    if (tx != undefined) {
+      return JSON.stringify(
+        {
+          from: tx?.from,
+          to: tx?.to,
+          nonce: tx?.nonce,
+          gasLimit: tx?.gasLimit,
+          data: tx?.data,
+          "value (in ETH)": ethers.utils.formatEther(tx?.value),
+          chainId: tx?.chainId,
+          type: 2,
+          "maxPriorityFeePerGas (in Gwei)": ethers.utils.formatUnits(
+            tx?.maxPriorityFeePerGas,
+            "gwei"
+          ),
+          "maxFeePerGas (in Gwei)": ethers.utils.formatUnits(
+            tx?.maxFeePerGas,
+            "gwei"
+          ),
+        },
+        null,
+        2
+      );
+    } else {
+      return "no transaction specified";
+    }
+  };
 
-    // sign and serialize tx
-    let rawTransaction = await signer
-      .signTransaction(data)
-      // @ts-ignore
-      .then(ethers.utils.serializeTransaction(data));
+  const signTransaction = async () => {
+    if (tx != undefined) {
+      let signer = new ethers.Wallet(privKey);
 
-    //setSignedTx(rawTransaction);
+      // sign tx
+      let signedTx = await signer.signTransaction(
+        tx as ethers.providers.TransactionRequest
+      );
 
-    let txobj = {
-      signedTx: rawTransaction,
-      initialTx: data,
-    };
+      let txobj = {
+        signedTx: signedTx,
+        initialTx: tx,
+      };
 
-    setTx(txobj);
+      setSignedTx(txobj);
+    } else {
+      alert("no tx specified!");
+    }
   };
 
   return (
@@ -98,15 +143,17 @@ const Sign = ({ page, setPage }: pageProps) => {
       <p className="card-header px-2 text-lg">Signing transaction</p>
       {currentStep === 1 && (
         <div className="p-4">
-          <p className="text-center font-bold mb-4">Offline computer only!</p>
+          <p className="text-center font-bold mb-4">
+            Only use on an offline computer!
+          </p>
           <p className="mb-2">1. Input your mnemonic OR private key</p>
           <Form
             type="password"
             placeholder="your mnemonic"
             value={mnemonic}
-            onChange={setMnemonic}
+            onChange={handleMnemonic}
           />
-          {ethers.utils.isValidMnemonic(mnemonic) && (
+          {validMnemonic && (
             <div>
               <p>2. Choose the signer account</p>
               <div>
@@ -114,7 +161,7 @@ const Sign = ({ page, setPage }: pageProps) => {
                   type="radio"
                   value={0}
                   name="signer"
-                  onChange={radioHandler}
+                  onChange={handleRadioInput}
                 />{" "}
                 {ethers.Wallet.fromMnemonic(
                   `${mnemonic}`,
@@ -125,7 +172,7 @@ const Sign = ({ page, setPage }: pageProps) => {
                   type="radio"
                   value={1}
                   name="signer"
-                  onChange={radioHandler}
+                  onChange={handleRadioInput}
                 />{" "}
                 {ethers.Wallet.fromMnemonic(
                   `${mnemonic}`,
@@ -136,7 +183,7 @@ const Sign = ({ page, setPage }: pageProps) => {
                   type="radio"
                   value={2}
                   name="signer"
-                  onChange={radioHandler}
+                  onChange={handleRadioInput}
                 />{" "}
                 {ethers.Wallet.fromMnemonic(
                   `${mnemonic}`,
@@ -150,13 +197,12 @@ const Sign = ({ page, setPage }: pageProps) => {
             type="password"
             placeholder="your private key"
             value={privKey}
-            onChange={setPrivKey}
+            onChange={handlePrivKey}
           />
-
-          {verifyPrivKey(privKey) && (
+          {validKey && (
             <div>
               <p>2. Signing with address:</p>
-              {new ethers.Wallet(privKey).address.toString()}
+              {address}
             </div>
           )}
 
@@ -180,13 +226,12 @@ const Sign = ({ page, setPage }: pageProps) => {
             onChange={(e: any) => readFileOnUpload(e.target.files[0])}
           />
           <p className="mt-6">2. Or scan the generated QR code</p>
-          {/* @ts-ignore */}
           <QrReader
+            constraints={{}}
             onResult={(result, error) => {
               if (!!result) {
                 handleQRcode(result.getText());
               }
-
               if (!!error) {
                 //console.info(error);
               }
@@ -202,33 +247,18 @@ const Sign = ({ page, setPage }: pageProps) => {
       {currentStep === 3 && (
         <div className="p-4">
           <p>Transaction to sign:</p>
-          {JSON.stringify(
-            {
-              from: data?.from,
-              to: data?.to,
-              "value (in wei)": Number(data?.value.hex),
-              data: data?.data,
-              gasLimit: data?.gasLimit,
-              "maxPriorityFeePerGas (in wei)": Number(
-                data?.maxPriorityFeePerGas.hex
-              ),
-              "maxFeePerGas (in wei)": Number(data?.maxFeePerGas.hex),
-              nonce: data?.nonce,
-              type: 2,
-              chainId: data?.chainId,
-            },
-            null,
-            2
-          )}
+          <div className="m-2 p-2 border border-gray">
+            {formatTransaction()}
+          </div>
           <p>You are signing with address:</p>
-          {new ethers.Wallet(privKey).address.toString()}
+          <div className="m-2">{address}</div>
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(2)} />
             <Button
               text="Confirm"
               onClick={() => {
                 setCurrentStep(4);
-                signTransaction(data);
+                signTransaction();
               }}
             />
           </div>
@@ -241,7 +271,7 @@ const Sign = ({ page, setPage }: pageProps) => {
           <a
             id="downloadJson"
             href={`data:text/json;charset=utf-8,${encodeURIComponent(
-              JSON.stringify(tx)
+              JSON.stringify(signedTx)
             )}`}
           >
             <Button
@@ -254,7 +284,7 @@ const Sign = ({ page, setPage }: pageProps) => {
             />
           </a>
           <p className="mt-6">2. Or scan the generated QR code</p>
-          <QRCodeSVG value={JSON.stringify(tx)} className="m-4" />{" "}
+          <QRCodeSVG value={JSON.stringify(signedTx)} className="m-4" />{" "}
           <div className="flex justify-start">
             <Button text="Back" onClick={() => setCurrentStep(3)} />
           </div>
