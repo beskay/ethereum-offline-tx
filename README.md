@@ -4,9 +4,25 @@
 
 A web interface to simplify the process of sending an offline transaction, built with React.js and TypeScript.
 
-WIP, more info will follow.
+Right now only basic Ether transfers are supported, but smart contract interactions will follow soon.
 
 [Demo](https://offlinetx.netlify.app/)
+
+### Getting started
+
+1. Clone this repository on your online computer
+
+```
+git clone git@github.com:beskay/ethereum-offline-tx.git
+```
+
+2. In a terminal, run `npm install` to install the required dependencies
+
+```
+cd ethereum-offline-tx
+cd webapp
+npm install
+```
 
 ## CLI-Tool
 
@@ -28,6 +44,12 @@ git clone git@github.com:beskay/ethereum-offline-tx.git
 ```
 
 2. In a terminal, run `npm install` to install the required dependencies
+
+```
+cd ethereum-offline-tx
+cd CLI
+npm install
+```
 
 3. Zip and copy the folder to your offline computer
 
