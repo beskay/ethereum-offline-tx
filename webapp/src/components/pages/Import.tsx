@@ -95,7 +95,7 @@ const Import = ({ page, setPage }: pageProps) => {
 
   return (
     <div className="card w-full max-w-xl m-4">
-      <p className="card-header px-2 text-lg">Signing transaction</p>{" "}
+      <p className="card-header px-2 text-lg">Import transaction</p>{" "}
       {currentStep === 1 && (
         <div className="p-4">
           <p>1. Upload the signed .json File</p>
