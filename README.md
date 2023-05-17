@@ -1,5 +1,12 @@
 # Sign and Send Offline Transactions
 
+A web app and CLI tool to send transactions from an airgapped device. 
+
+Right now the development is halted, there are a few things left on the todo list which have to be implemented at a later date (from me -- or maybe from you if you want to contribute :) )
+
+- The web app is not done yet and doesnt run on an offline computer, need to figure out how to support this
+- Rewrite the CLI tool in Golang/Rust/C, basically any compiled language. OR use the recently released [NodeJS single executable](https://nodejs.org/api/single-executable-applications.html) file. The goal is to not requiring NodeJS preinstalled on the airgapped device.
+
 ## Web app
 
 A web interface to simplify the process of sending an offline transaction, built with React.js and TypeScript.
